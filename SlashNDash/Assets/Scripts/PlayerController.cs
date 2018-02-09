@@ -10,17 +10,24 @@ public class PlayerController : MonoBehaviour {
     public float xSlowdown;
     public float maxXSpeed;
     public float initJumpVelocity;
+    public float initWallJumpSpeed;
 
     private bool inputJump;
     private bool inputRight;
     private bool inputLeft;
     private bool isGrounded;
+    private bool wallLeft;
+    private bool wallRight;
+
+    Rigidbody2D rb;
 
     // Use this for initialization
     void Start() {
         inputJump = false;
         inputLeft = false;
         inputRight = false;
+        isGrounded = false;
+        rb = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
@@ -42,48 +49,78 @@ public class PlayerController : MonoBehaviour {
         } else {
             inputRight = false;
         }
-
         if (Input.GetKeyDown(KeyCode.W)) {
             inputJump = true;
         }
     }
 
     private void FixedUpdate() {
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+
         // Applying acceleration if the player gives input.
-        if (inputLeft && rb.velocity.x > -maxXSpeed) {
+        if (inputLeft && inputRight) {
+            //Do nothing
+        } else if (inputLeft && rb.velocity.x > -maxXSpeed) {
             rb.AddForce(Vector2.left * xAcc);
-        }
-        if (inputRight && rb.velocity.x < maxXSpeed) {
+        } else if (inputRight && rb.velocity.x < maxXSpeed) {
             rb.AddForce(Vector2.right * xAcc);
         }
 
-        //Slowing the player down if they dont give input.
+        //If the player goes too fast while moving, their speed is corrected.
+        if (rb.velocity.x < -maxXSpeed) {
+            rb.velocity = new Vector2(-maxXSpeed, rb.velocity.y);
+        }
+        if (rb.velocity.x > maxXSpeed) {
+            rb.velocity = new Vector2(maxXSpeed, rb.velocity.y);
+        }
 
-        if (!inputLeft && rb.velocity.x < 0) {
+        //Slowing the player down if they dont give input.
+        if ((!inputLeft || inputRight) && rb.velocity.x < 0) {
             rb.AddForce(Vector2.right * xSlowdown);
         }
-        if (!inputRight && rb.velocity.x > 0) {
+        if ((!inputRight || inputLeft) && rb.velocity.x > 0) {
             rb.AddForce(Vector2.left * xSlowdown);
         }
-
-        if (!inputRight && !inputLeft && Math.Abs(rb.velocity.x) < 0.2) {
-            Vector3 v = rb.velocity;
-            v.x = 0f;
-            rb.velocity = v;
+        //Stops the player if they aren't trying to move and their speed is low enough.
+        if (inputRight == inputLeft && Math.Abs(rb.velocity.x) < 0.2) {
+            rb.velocity = new Vector2(0f, rb.velocity.y);
         }
-
 
         if (inputJump) {
             if (isGrounded) {
                 rb.velocity = new Vector2(rb.velocity.x, initJumpVelocity);
+                Debug.Log("Jumping");
+            }
+            if (wallLeft && !isGrounded) {
+                rb.velocity = new Vector2(1, 1) * initWallJumpSpeed;
+                Debug.Log("Wall Jumping");
+            }
+            if (wallRight && !isGrounded) {
+                rb.velocity = new Vector2(-1, 1) * initWallJumpSpeed;
+                Debug.Log("Wall Jumping");
             }
             inputJump = false;
         }
-        Debug.Log(rb.velocity);
+
+
     }
 
     public void setIsGrounded(bool isGrounded) {
         this.isGrounded = isGrounded;
+    }
+
+    public void setWallLeft(bool wallLeft) {
+        this.wallLeft = wallLeft;
+    }
+
+    public void setWallRight(bool wallRight) {
+        this.wallRight = wallRight;
+    }
+
+    public String getDebugText() {
+        return "Velocity: " + rb.velocity
+        + "\ninputJump: " + inputJump
+        + "\ninputRight: " + inputRight
+        + "\ninputLeft: " + inputLeft
+        + "\nisGrounded: " + isGrounded;
     }
 }

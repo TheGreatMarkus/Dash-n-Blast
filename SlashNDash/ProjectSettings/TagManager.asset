@@ -4,7 +4,7 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - GroundDetector
+  - Terrain
   layers:
   - Default
   - TransparentFX

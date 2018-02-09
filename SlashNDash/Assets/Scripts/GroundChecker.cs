@@ -2,24 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GroundedChecker : MonoBehaviour {
+public class GroundChecker : MonoBehaviour {
 
     private PlayerController pc;
     // Use this for initialization
     void Start () {
         pc = GameObject.Find("Player").GetComponent<PlayerController>();
     }
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
 
-    private void OnTriggerEnter2D(Collider2D collision) {
+    private void OnTriggerEnter2D(Collider2D other) {
+        Debug.Log("Ground detector collided with " + other.name);
         pc.setIsGrounded(true);
+        
     }
 
-    private void OnTriggerExit2D(Collider2D collision) {
+    private void OnTriggerExit2D(Collider2D other) {
         pc.setIsGrounded(false);
     }
 }
