@@ -12,11 +12,11 @@ public class GroundChecker : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D other) {
         Debug.Log("Ground detector collided with " + other.name);
-        pc.setIsGrounded(true);
+        pc.SetIsGrounded(true);
         
     }
 
     private void OnTriggerExit2D(Collider2D other) {
-        pc.setIsGrounded(false);
+        pc.SetIsGrounded(false);
     }
 }

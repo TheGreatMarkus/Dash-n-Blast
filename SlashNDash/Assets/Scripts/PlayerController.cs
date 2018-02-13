@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour {
     public float initWallJumpSpeed;
     public float dashSpeed;
     public float totalDashTime;
+    public float totalDashCooldown;
 
     private bool inputJump;
     private bool inputRight;
@@ -24,6 +25,7 @@ public class PlayerController : MonoBehaviour {
     private bool dashing;
 
     private float dashTime;
+    private float dashCooldown;
 
     Rigidbody2D rb;
 
@@ -38,7 +40,7 @@ public class PlayerController : MonoBehaviour {
         wallLeft = false;
         wallRight = false;
 
-        dashTime = float.MaxValue;
+        dashTime = 0;
         rb = GetComponent<Rigidbody2D>();
 
     }
@@ -69,46 +71,58 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void FixedUpdate() {
-
-        handleDashing();
-        if(dashTime> totalDashTime) {// Not dashing.
-            handleHorizontalMouvement();
-            handleJumping();
+        HandleDashing();
+        if(!dashing) {// Not dashing.
+            HandleHorizontalMouvement();
+            HandleJumping();
         }
-        
     }
 
-    private void handleDashing() {
-        if (inputDash) {
-            dashTime = 0;
+    private void HandleDashing() {
+        //Activate dashing if the player gave input and the cooldown has refreshed
+        if (inputDash && dashCooldown == 0) {
+            dashTime = totalDashTime;
+            dashCooldown = totalDashCooldown;
             inputDash = false;
+            dashing = true;
         }
-        if (dashTime < totalDashTime) {
-            rb.velocity = new Vector2(1, 0.2f) * dashSpeed * (float)Math.Pow(Math.E, -dashTime);
-            dashTime += Time.deltaTime;
-
+        if (dashing) {
+            //This is wrong, the direction can change mid dash, which is not what i want
+            //Gotta put a variable determining the side that the player is facing at all times.
+            if (inputRight && inputLeft) {
+            } else if (inputRight) {
+                rb.velocity = new Vector2(1, 0.1f) * dashSpeed * (float)Math.Pow(Math.E, dashTime - totalDashTime);
+            } else if (inputLeft) {
+                rb.velocity = new Vector2(-1, 0.1f) * dashSpeed * (float)Math.Pow(Math.E, dashTime - totalDashTime);
+            }
+            dashTime -= Time.deltaTime;
+            if (dashTime < 0) {
+                dashTime = 0;
+                dashing = false;
+            }
+        }
+        dashCooldown -= Time.deltaTime;
+        if (dashCooldown < 0) {
+            dashCooldown = 0;
         }
     }
 
-    private void handleJumping() {
+    private void HandleJumping() {
         if (inputJump) {
             if (isGrounded) {
                 rb.velocity = new Vector2(rb.velocity.x, initJumpVelocity);
-                Debug.Log("Jumping");
             }
             if (wallLeft && !isGrounded) {
                 rb.velocity = new Vector2(1, 1) * initWallJumpSpeed;
-                Debug.Log("Wall Jumping");
             }
             if (wallRight && !isGrounded) {
                 rb.velocity = new Vector2(-1, 1) * initWallJumpSpeed;
-                Debug.Log("Wall Jumping");
             }
             inputJump = false;
         }
     }
 
-    private void handleHorizontalMouvement() {
+    private void HandleHorizontalMouvement() {
         // Applying acceleration if the player gives input.
         if (inputLeft && inputRight) {
             //Do nothing
@@ -139,24 +153,25 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    public void setIsGrounded(bool isGrounded) {
+    public void SetIsGrounded(bool isGrounded) {
         this.isGrounded = isGrounded;
     }
 
-    public void setWallLeft(bool wallLeft) {
+    public void SetWallLeft(bool wallLeft) {
         this.wallLeft = wallLeft;
     }
 
-    public void setWallRight(bool wallRight) {
+    public void SetWallRight(bool wallRight) {
         this.wallRight = wallRight;
     }
 
-    public String getDebugText() {
+    public String GetDebugText() {
         return "Velocity: " + rb.velocity
         + "\ninputJump: " + inputJump
         + "\ninputRight: " + inputRight
         + "\ninputLeft: " + inputLeft
         + "\nisGrounded: " + isGrounded
-        + "\n Dash Time: " + dashTime;
+        + "\nDash Time: " + dashTime
+        +"\nDash Cooldown: " + dashCooldown;
     }
 }

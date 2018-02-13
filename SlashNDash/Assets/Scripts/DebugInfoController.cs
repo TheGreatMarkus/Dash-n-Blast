@@ -15,7 +15,7 @@ public class DebugInfoController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        text.text = pc.getDebugText();
+        text.text = pc.GetDebugText();
 
     }
 }

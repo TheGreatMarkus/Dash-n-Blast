@@ -12,11 +12,11 @@ public class RightWallChecker : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D other) {
         Debug.Log("Right wall detector collided with " + other.name);
-        pc.setWallRight(true);
+        pc.SetWallRight(true);
 
     }
 
     private void OnTriggerExit2D(Collider2D other) {
-        pc.setWallRight(false);
+        pc.SetWallRight(false);
     }
 }
