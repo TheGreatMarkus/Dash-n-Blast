@@ -8,8 +8,12 @@ public class PlayerController : MonoBehaviour {
     public float xAcc;
     public float xSlowdown;
     public float maxXSpeed;
+
     public float initJumpVelocity;
+
     public float initWallJumpSpeed;
+    public float wallJumpAngle;
+
     public float dashSpeed;
     public float totalDashTime;
     public float totalDashCooldown;
@@ -28,6 +32,8 @@ public class PlayerController : MonoBehaviour {
     private float dashCooldown;
 
     Rigidbody2D rb;
+    Animator anim;
+    SpriteRenderer sr;
 
     // Use this for initialization
     void Start() {
@@ -42,6 +48,8 @@ public class PlayerController : MonoBehaviour {
 
         dashTime = 0;
         rb = GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
+        sr = GetComponent<SpriteRenderer>();
 
     }
 
@@ -51,16 +59,22 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void getInput() {
+        anim.SetInteger("State", 0);
         //Getting input from the user.
         if (Input.GetKey(KeyCode.A)) {
+            sr.flipX = true;
             inputLeft = true;
+            anim.SetInteger("State", 1);
         } else {
             inputLeft = false;
         }
         if (Input.GetKey(KeyCode.D)) {
+            sr.flipX = false;
             inputRight = true;
+            anim.SetInteger("State", 1);
         } else {
             inputRight = false;
+
         }
         if (Input.GetKeyDown(KeyCode.W)) {
             inputJump = true;
@@ -72,7 +86,7 @@ public class PlayerController : MonoBehaviour {
 
     private void FixedUpdate() {
         HandleDashing();
-        if(!dashing) {// Not dashing.
+        if (!dashing) {// Not dashing.
             HandleHorizontalMouvement();
             HandleJumping();
         }
@@ -113,10 +127,11 @@ public class PlayerController : MonoBehaviour {
                 rb.velocity = new Vector2(rb.velocity.x, initJumpVelocity);
             }
             if (wallLeft && !isGrounded) {
-                rb.velocity = new Vector2(1, 1) * initWallJumpSpeed;
+                rb.velocity = new Vector2((float)Math.Cos(wallJumpAngle), (float)Math.Sin(wallJumpAngle)) * initWallJumpSpeed;
             }
             if (wallRight && !isGrounded) {
-                rb.velocity = new Vector2(-1, 1) * initWallJumpSpeed;
+
+                rb.velocity = new Vector2(-(float)Math.Cos(wallJumpAngle), (float)Math.Sin(wallJumpAngle)) * initWallJumpSpeed;
             }
             inputJump = false;
         }
@@ -140,12 +155,14 @@ public class PlayerController : MonoBehaviour {
             rb.velocity = new Vector2(maxXSpeed, rb.velocity.y);
         }
 
-        //Slowing the player down if they dont give input.
-        if ((!inputLeft || inputRight) && rb.velocity.x < 0) {
-            rb.AddForce(Vector2.right * xSlowdown);
-        }
-        if ((!inputRight || inputLeft) && rb.velocity.x > 0) {
-            rb.AddForce(Vector2.left * xSlowdown);
+        //Slowing the player down if they dont give input and are grounded
+        if (isGrounded) {
+            if ((!inputLeft || inputRight) && rb.velocity.x < 0) {
+                rb.AddForce(Vector2.right * xSlowdown);
+            }
+            if ((!inputRight || inputLeft) && rb.velocity.x > 0) {
+                rb.AddForce(Vector2.left * xSlowdown);
+            }
         }
         //Stops the player if they aren't trying to move and their speed is low enough.
         if (inputRight == inputLeft && Math.Abs(rb.velocity.x) < 0.2) {
@@ -171,7 +188,9 @@ public class PlayerController : MonoBehaviour {
         + "\ninputRight: " + inputRight
         + "\ninputLeft: " + inputLeft
         + "\nisGrounded: " + isGrounded
+        + "\n Wall Left: " + wallLeft
+        + "\n Wall Right: " + wallRight
         + "\nDash Time: " + dashTime
-        +"\nDash Cooldown: " + dashCooldown;
+        + "\nDash Cooldown: " + dashCooldown;
     }
 }
