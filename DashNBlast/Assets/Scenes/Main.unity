@@ -1167,14 +1167,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   xAcc: 0.8
   xSlowdown: 0.4
+  ySlowdown: 1
   maxXSpeed: 5
-  initJumpVelocity: 6
-  initWallJumpSpeed: 14
-  wallJumpAngle: 1
+  initJumpSpeed: 7
+  initWjSpeed: 10
+  wjAngle: 0.85
   dashSpeed: 15
   totalDashTime: 0.4
   totalDashCooldown: 0.7
-  gravityScale: 2.5
+  gScale: 3
   totalJumpTime: 0.3
 --- !u!95 &1846882669
 Animator:
