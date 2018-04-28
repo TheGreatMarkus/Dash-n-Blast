@@ -21,6 +21,7 @@ public class PlayerController : MonoBehaviour {
     public float wjAngle;
 
     public float dashSpeed;
+    public float dashSpeedDecay;
     public float totalDashTime;
     public float totalDashCooldown;
 
@@ -48,10 +49,9 @@ public class PlayerController : MonoBehaviour {
     private float dashCooldown;
     private float jumpTime;
 
-    private Rigidbody2D rb;
-    private Animator anim;
-    private SpriteRenderer sr;
 
+
+    private Rigidbody2D rb;
 
 
     // Use this for initialization
@@ -78,30 +78,29 @@ public class PlayerController : MonoBehaviour {
 
         dashTime = 0;
         rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
-        sr = GetComponent<SpriteRenderer>();
+
 
         rb.gravityScale = gScale;
 
     }
 
-    // Update is called once per frame
+    // Update handles player input and other non-physics related calculations
     void Update() {
         HandleInput();
         DeterminePlayerDirection();
 
     }
 
-    private void FixedUpdate() {
+    // FixedUpdate deals with 
+    void FixedUpdate() {
         HandleDashing();
         if (!dashing) {//No other mouvement is allowed during a dash
             HandleHorizontalMouvement();
-            handleVerticalMouvement();
+            HandleVerticalMouvement();
             HandleJumping();
         }
     }
 
-    //playerDirection is used for animations and for dashing
     private void DeterminePlayerDirection() {
         if (!dashing) {
             if (inputLeft && inputRight) {
@@ -111,11 +110,7 @@ public class PlayerController : MonoBehaviour {
                 playerDirection = Direction.LEFT;
             }
         }
-        if (playerDirection == Direction.RIGHT) {
-            sr.flipX = false;
-        } else if (playerDirection == Direction.LEFT) {
-            sr.flipX = true;
-        }
+        
     }
 
     private void HandleInput() {
@@ -134,19 +129,20 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void HandleDashing() {
-        //Activate dashing if the player gave input and the cooldown has refreshed
-        if (inputDash && dashCooldown == 0) {
+        // Activate dashing if the player gave input and the cooldown has refreshed
+        if (inputDash && !dashing && dashCooldown == 0) {
             dashTime = totalDashTime;
             dashCooldown = totalDashCooldown;
             inputDash = false;
             dashing = true;
             rb.gravityScale = 0;
         }
+        // Handle dashing
         if (dashing) {
             if (playerDirection == Direction.RIGHT) {
-                rb.velocity = new Vector2(1, 0) * dashSpeed * (float)Math.Pow(Math.E, 5 * (dashTime - totalDashTime));
+                rb.velocity = Vector2.right * dashSpeed * (float)Math.Pow(Math.E, dashSpeedDecay * (dashTime - totalDashTime));
             } else if (playerDirection == Direction.LEFT) {
-                rb.velocity = new Vector2(-1, 0) * dashSpeed * (float)Math.Pow(Math.E, 5 * (dashTime - totalDashTime));
+                rb.velocity = Vector2.left * dashSpeed * (float)Math.Pow(Math.E, dashSpeedDecay * (dashTime - totalDashTime));
             }
             dashTime -= Time.deltaTime;
             if (dashTime <= 0) {
@@ -156,6 +152,7 @@ public class PlayerController : MonoBehaviour {
                 inputInitJump = false;
             }
         }
+        // Cooldown Management
         if (dashCooldown > 0) {
             dashCooldown -= Time.deltaTime;
         } else if (dashCooldown <= 0) {
@@ -177,26 +174,24 @@ public class PlayerController : MonoBehaviour {
             }
             inputInitJump = false;
         }
-
+        // If the player hits something he should stop "jumping"
         if (jumping) {
             rb.velocity = new Vector2(rb.velocity.x, initJumpSpeed);
             if (!inputHoldJump || jumpTime <= 0) {
+                rb.velocity = new Vector2(rb.velocity.x, 4);
                 jumping = false;
             }
             jumpTime -= Time.deltaTime;
         }
-
         if (wjRight) {
-            float a = Math.Min(wjAngle * (1 + 4 * (totalJumpTime - jumpTime)), 3 * (float)Math.PI / 2);
-            rb.velocity = new Vector2((float)Math.Cos(a), (float)Math.Sin(a)) * initWjSpeed;
+            rb.velocity = new Vector2((float)Math.Cos(wjAngle), (float)Math.Sin(wjAngle)) * initWjSpeed;
             if (!inputHoldJump || jumpTime <= 0) {
                 wjRight = false;
             }
             jumpTime -= Time.deltaTime;
         }
         if (wjLeft) {
-            float a = Math.Min(wjAngle * (1 + 4 * (totalJumpTime - jumpTime)), 3 * (float)Math.PI / 2);
-            rb.velocity = new Vector2(-(float)Math.Cos(a), (float)Math.Sin(a)) * initWjSpeed;
+            rb.velocity = new Vector2(-(float)Math.Cos(wjAngle), (float)Math.Sin(wjAngle)) * initWjSpeed;
             if (!inputHoldJump || jumpTime <= 0) {
                 wjLeft = false;
             }
@@ -207,6 +202,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void HandleHorizontalMouvement() {
+        /*
         // Applying acceleration if the player gives input.
         if (inputLeft && inputRight) {
             //Do nothing
@@ -226,16 +222,26 @@ public class PlayerController : MonoBehaviour {
         if (inputRight == inputLeft) {
             Slowdown("x", xSlowdown);
         }
-    }
-
-    public void handleVerticalMouvement() {
-        rb.gravityScale = gScale;
-        if (!inputInitJump && ((wallLeft && inputLeft) || (wallRight && inputRight))) {
-            Slowdown("y", ySlowdown);
-            rb.gravityScale = 0;
+        */
+        if (inputLeft == inputRight) {
+            rb.velocity = new Vector2(0, rb.velocity.y);
+        } else if (inputLeft) {
+            rb.velocity = new Vector2(-maxXSpeed, rb.velocity.y);
+        } else if (inputRight) {
+            rb.velocity = new Vector2(maxXSpeed, rb.velocity.y);
         }
     }
 
+    public void HandleVerticalMouvement() {
+        if (!inputInitJump && ((wallLeft && inputLeft) || (wallRight && inputRight))) {
+            //Slowdown("y", ySlowdown);
+            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.gravityScale = 0;
+        } else {
+            rb.gravityScale = gScale;
+        }
+    }
+    /*
     public void Slowdown(String axis, float slowdown) {
         if (axis == "x") {
             if (Math.Abs(rb.velocity.x) > slowdown) {
@@ -264,7 +270,7 @@ public class PlayerController : MonoBehaviour {
         }
 
     }
-
+    */
     public void SetIsGrounded(bool isGrounded) {
         this.grounded = isGrounded;
     }
@@ -277,14 +283,30 @@ public class PlayerController : MonoBehaviour {
         this.wallRight = wallRight;
     }
 
+    public Direction GetPlayerDirection() {
+        return playerDirection;
+    }
+
+    public bool GetGrounded() {
+        return grounded;
+    }
+
+    public bool GetJumping() {
+        return jumping;
+    }
+
+    public bool GetDashing() {
+        return dashing;
+    }
+
     public String GetDebugText() {
         return "Velocity: " + rb.velocity
         + "\ninputJump: " + inputHoldJump
         + "\ninputRight: " + inputRight
         + "\ninputLeft: " + inputLeft
         + "\nisGrounded: " + grounded
-        + "\n Wall Left: " + wallLeft
-        + "\n Wall Right: " + wallRight
+        + "\nWall Left: " + wallLeft
+        + "\nWall Right: " + wallRight
         + "\nDash Time: " + dashTime
         + "\nDash Cooldown: " + dashCooldown;
     }
