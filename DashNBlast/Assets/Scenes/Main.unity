@@ -1018,7 +1018,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.55785036, g: 0.7240785, b: 0.9852941, a: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -1080,7 +1080,7 @@ GameObject:
   - component: {fileID: 1706669875}
   - component: {fileID: 1706669874}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Frame Displayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1313,11 +1313,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01f16e297f87bb34da1b3d16d41ff18b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xAcc: 0.8
-  xSlowdown: 0.4
-  ySlowdown: 1
+  xAcc: 5
+  xSlowdown: 5
   maxXSpeed: 5
-  initJumpSpeed: 7
+  jumpSpeed: 6
   initWjSpeed: 10
   wjAngle: 1
   dashSpeed: 15
@@ -1326,6 +1325,7 @@ MonoBehaviour:
   totalDashCooldown: 0.7
   gScale: 3
   totalJumpTime: 0.3
+  totalWjTime: 0.2
 --- !u!95 &1846882669
 Animator:
   serializedVersion: 3
@@ -1434,7 +1434,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: -19.08}
-  m_SizeDelta: {x: 160, y: 30}
+  m_SizeDelta: {x: 200, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1998743042
 MonoBehaviour:
